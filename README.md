@@ -6,7 +6,7 @@ A simple script installer for [flywaydb cli](https://flywaydb.org/documentation/
 
 ```
 "scripts": {
-  "migrate": "flyway -X -configFile=conf/flyway.conf migrate"
+  "migrate": "flyway -X -configFiles=conf/flyway.conf migrate"
 }
 ```
 
@@ -40,7 +40,7 @@ TODO
 
 ## Contributors
 
-Maintainer/Publisher [sgraham785](https://github.com/sgraham785)
+Maintainer/Publisher [aldenquimby](https://github.com/aldenquimby)
 
 ### Thank you to:
 
