@@ -103,10 +103,8 @@ export const downloadFlywaySource = source => {
   if (fs.existsSync(source.filename)) {
     console.log("Cached file exists, skipping download", source.filename);
     return Promise.resolve(source.filename);
-  } else {
-    rimraf(downloadDir, () => {
-      fs.mkdirSync(downloadDir);
-    });
+  } else if (!fs.existsSync(downloadDir)) {
+    fs.mkdirSync(downloadDir);
   }
 
   console.log("Downloading", source.url);
@@ -182,7 +180,6 @@ export const extractToLib = file => {
   } else {
     rimraf.sync(extractDir);
     fs.mkdirSync(extractDir);
-    return Promise.resolve(extractDir);
   }
 
   if (path.extname(file) === ".zip") {

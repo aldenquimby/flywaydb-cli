@@ -128,10 +128,8 @@ const downloadFlywaySource = exports.downloadFlywaySource = source => {
   if (_fsExtra2.default.existsSync(source.filename)) {
     console.log("Cached file exists, skipping download", source.filename);
     return Promise.resolve(source.filename);
-  } else {
-    (0, _rimraf2.default)(downloadDir, () => {
-      _fsExtra2.default.mkdirSync(downloadDir);
-    });
+  } else if (!_fsExtra2.default.existsSync(downloadDir)) {
+    _fsExtra2.default.mkdirSync(downloadDir);
   }
 
   console.log("Downloading", source.url);
@@ -202,7 +200,6 @@ const extractToLib = exports.extractToLib = file => {
   } else {
     _rimraf2.default.sync(extractDir);
     _fsExtra2.default.mkdirSync(extractDir);
-    return Promise.resolve(extractDir);
   }
 
   if (_path2.default.extname(file) === ".zip") {
