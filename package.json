@@ -1,5 +1,5 @@
 {
-  "name": "flywaydb-cli",
+  "name": "@aldenquimby/flywaydb-cli",
   "version": "0.9.0",
   "description": "Install latest flywaydb-cli as a node module",
   "main": "dist/installer.js",
