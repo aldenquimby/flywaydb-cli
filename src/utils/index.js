@@ -16,9 +16,9 @@ const repoBaseUrl =
 
 const readDotFlywayFile = () => {
   let resolveDotFlywayPath = fs.existsSync(
-    path.resolve(__dirname, "../../../../", ".flyway")
+    path.resolve(__dirname, "../../../../../", ".flyway")
   )
-    ? path.resolve(__dirname, "../../../../", ".flyway")
+    ? path.resolve(__dirname, "../../../../../", ".flyway")
     : "";
   // console.log("readDotFlywayFile dotFlywayPath -> ", resolveDotFlywayPath);
   let encoding = "utf8";
