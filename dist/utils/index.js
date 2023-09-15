@@ -85,12 +85,25 @@ const getReleaseSource = exports.getReleaseSource = () => (0, _requestPromise2.d
       filename: `flyway-commandline-${releaseVersion}-linux-x64.tar.gz`,
       folder: `flyway-${releaseVersion}`
     },
+    arm64: {
+      url: `${repoBaseUrl}/${releaseVersion}/flyway-commandline-${releaseVersion}-macosx-arm64.tar.gz`,
+      filename: `flyway-commandline-${releaseVersion}-macosx-arm64.tar.gz`,
+      folder: `flyway-${releaseVersion}`
+    },
     darwin: {
       url: `${repoBaseUrl}/${releaseVersion}/flyway-commandline-${releaseVersion}-macosx-x64.tar.gz`,
       filename: `flyway-commandline-${releaseVersion}-macosx-x64.tar.gz`,
       folder: `flyway-${releaseVersion}`
     }
   };
+
+  // Apple Silicon version was released with 9.6.0
+  if (_os2.default.arch() === "arm64") {
+    const [majorVersion, minorVersion] = releaseVersion.split(".");
+    if (Number(majorVersion) > 9 || Number(majorVersion) === 9 && Number(minorVersion) >= 6) {
+      return sources.arm64;
+    }
+  }
 
   return sources[_os2.default.platform()];
 });
