@@ -8,7 +8,7 @@ import ProgressBar from "progress";
 import extractZip from "extract-zip";
 import { spawn } from "child_process";
 import filesize from "filesize";
-import rimraf from "rimraf";
+import { rimrafSync } from "rimraf";
 const env = process.env;
 
 const repoBaseUrl =
@@ -178,7 +178,7 @@ export const extractToLib = file => {
   if (!fs.existsSync(extractDir)) {
     fs.mkdirSync(extractDir);
   } else {
-    rimraf.sync(extractDir);
+    rimrafSync(extractDir);
     fs.mkdirSync(extractDir);
   }
 
@@ -221,7 +221,7 @@ export const copyToBin = libDir => {
     let binDir = path.join(__dirname, "../../", "bin");
 
     if (fs.existsSync(flywayDir)) {
-      rimraf.sync(path.join(__dirname, "../../", "bin"));
+      rimrafSync(path.join(__dirname, "../../", "bin"));
 
       if (fs.existsSync(path.join(flywayDir, "jre", "lib", "amd64"))) {
         fs.removeSync(path.join(flywayDir, "jre", "lib", "amd64", "server", "libjsig.so")) // Broken link, we need to delete it to avoid the copy to fail
@@ -245,5 +245,5 @@ const flywayVersionDir = libDir => {
 };
 
 export const cleanupDirs = () => {
-  rimraf.sync(path.join(__dirname, "../../", "lib"));
+  rimrafSync(path.join(__dirname, "../../", "lib"));
 };
