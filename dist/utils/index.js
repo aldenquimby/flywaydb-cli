@@ -45,8 +45,6 @@ var _filesize2 = _interopRequireDefault(_filesize);
 
 var _rimraf = require("rimraf");
 
-var _rimraf2 = _interopRequireDefault(_rimraf);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const env = process.env;
@@ -98,7 +96,7 @@ const getReleaseSource = exports.getReleaseSource = () => (0, _requestPromise2.d
   };
 
   // Apple Silicon version was released with 9.6.0
-  if (_os2.default.arch() === "arm64") {
+  if (_os2.default.platform() === "darwin" && _os2.default.arch() === "arm64") {
     const [majorVersion, minorVersion] = releaseVersion.split(".");
     if (Number(majorVersion) > 9 || Number(majorVersion) === 9 && Number(minorVersion) >= 6) {
       return sources.arm64;
@@ -198,7 +196,7 @@ const extractToLib = exports.extractToLib = file => {
   if (!_fsExtra2.default.existsSync(extractDir)) {
     _fsExtra2.default.mkdirSync(extractDir);
   } else {
-    _rimraf2.default.sync(extractDir);
+    (0, _rimraf.rimrafSync)(extractDir);
     _fsExtra2.default.mkdirSync(extractDir);
   }
 
@@ -241,7 +239,7 @@ const copyToBin = exports.copyToBin = libDir => {
     let binDir = _path2.default.join(__dirname, "../../", "bin");
 
     if (_fsExtra2.default.existsSync(flywayDir)) {
-      _rimraf2.default.sync(_path2.default.join(__dirname, "../../", "bin"));
+      (0, _rimraf.rimrafSync)(_path2.default.join(__dirname, "../../", "bin"));
 
       if (_fsExtra2.default.existsSync(_path2.default.join(flywayDir, "jre", "lib", "amd64"))) {
         _fsExtra2.default.removeSync(_path2.default.join(flywayDir, "jre", "lib", "amd64", "server", "libjsig.so")); // Broken link, we need to delete it to avoid the copy to fail
@@ -263,5 +261,5 @@ const flywayVersionDir = libDir => {
 };
 
 const cleanupDirs = exports.cleanupDirs = () => {
-  _rimraf2.default.sync(_path2.default.join(__dirname, "../../", "lib"));
+  (0, _rimraf.rimrafSync)(_path2.default.join(__dirname, "../../", "lib"));
 };
