@@ -41,8 +41,6 @@ var _child_process = require("child_process");
 
 var _filesize = require("filesize");
 
-var _filesize2 = _interopRequireDefault(_filesize);
-
 var _rimraf = require("rimraf");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -151,7 +149,7 @@ const downloadFlywaySource = exports.downloadFlywaySource = source => {
       if (!error && response.statusCode === 200) {
         _fsExtra2.default.writeFileSync(source.filename, body);
 
-        console.log(`\nReceived ${(0, _filesize2.default)(body.length)} total.`);
+        console.log(`\nReceived ${(0, _filesize.filesize)(body.length)} total.`);
 
         resolve(source.filename);
       } else if (response) {
