@@ -41,8 +41,6 @@ var _child_process = require("child_process");
 
 var _filesize = require("filesize");
 
-var _rimraf = require("rimraf");
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const env = process.env;
@@ -194,7 +192,7 @@ const extractToLib = exports.extractToLib = file => {
   if (!_fsExtra2.default.existsSync(extractDir)) {
     _fsExtra2.default.mkdirSync(extractDir);
   } else {
-    (0, _rimraf.rimrafSync)(extractDir);
+    _fsExtra2.default.removeSync(extractDir);
     _fsExtra2.default.mkdirSync(extractDir);
   }
 
@@ -237,11 +235,7 @@ const copyToBin = exports.copyToBin = libDir => {
     let binDir = _path2.default.join(__dirname, "../../", "bin");
 
     if (_fsExtra2.default.existsSync(flywayDir)) {
-      (0, _rimraf.rimrafSync)(_path2.default.join(__dirname, "../../", "bin"));
-
-      if (_fsExtra2.default.existsSync(_path2.default.join(flywayDir, "jre", "lib", "amd64"))) {
-        _fsExtra2.default.removeSync(_path2.default.join(flywayDir, "jre", "lib", "amd64", "server", "libjsig.so")); // Broken link, we need to delete it to avoid the copy to fail
-      }
+      _fsExtra2.default.removeSync(binDir);
       _fsExtra2.default.copySync(flywayDir, binDir);
 
       resolve();
@@ -259,5 +253,5 @@ const flywayVersionDir = libDir => {
 };
 
 const cleanupDirs = exports.cleanupDirs = () => {
-  (0, _rimraf.rimrafSync)(_path2.default.join(__dirname, "../../", "lib"));
+  _fsExtra2.default.removeSync(_path2.default.join(__dirname, "../../", "lib"));
 };
