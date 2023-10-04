@@ -7,7 +7,7 @@ import requestProgress from "request-progress";
 import ProgressBar from "progress";
 import extractZip from "extract-zip";
 import { spawn } from "child_process";
-import { filesize } from "filesize";
+import filesize from "filesize";
 import { rimrafSync } from "rimraf";
 const env = process.env;
 

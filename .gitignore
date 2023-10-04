@@ -40,6 +40,8 @@ jspm_packages
 bin
 lib
 tmp
+!bin/flyway
+!bin/flyway.cmd
 
 # IntelliJ IDEA
 .idea
