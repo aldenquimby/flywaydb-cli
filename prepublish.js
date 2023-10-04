@@ -1,15 +1,13 @@
-const fs = require("fs");
 const path = require("path");
-const rimraf = require("rimraf");
-const { closeSync, openSync } = require("fs");
+const fs = require("fs-extra");
 
-const touch = filename => closeSync(openSync(filename, "w"));
+const touch = filename => fs.closeSync(fs.openSync(filename, "w"));
 const binDir = path.join(__dirname, "bin");
 
 if (!fs.existsSync(binDir)) {
   fs.mkdirSync(binDir);
 } else {
-  rimraf.sync(binDir);
+  fs.removeSync(binDir);
   fs.mkdirSync(binDir);
 }
 // usage
