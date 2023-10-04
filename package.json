@@ -1,6 +1,6 @@
 {
   "name": "@aldenquimby/flywaydb-cli",
-  "version": "0.11.2",
+  "version": "0.12.0",
   "description": "Install latest flywaydb-cli as a node module",
   "main": "dist/installer.js",
   "bin": {
@@ -38,8 +38,7 @@
     "progress": "^2.0.3",
     "request": "^2.88.2",
     "request-progress": "^3.0.0",
-    "request-promise": "^4.2.6",
-    "rimraf": "^5.0.5"
+    "request-promise": "^4.2.6"
   },
   "devDependencies": {
     "@ava/babel-preset-stage-4": "^1.0.0",
