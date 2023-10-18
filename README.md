@@ -1,6 +1,8 @@
 # flywaydb-cli
 
-A simple script installer for [flywaydb cli](https://flywaydb.org/documentation/commandline/)
+A simple script installer for [flywaydb cli](https://flywaydb.org/documentation/commandline/).
+
+Forked from [sgraham785/flywaydb-cli](https://github.com/sgraham785/flywaydb-cli) because that repository appears abandoned.
 
 ## Usage Examples
 
