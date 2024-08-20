@@ -1,33 +1,24 @@
-import os from "os";
-import fs from "fs-extra";
-import path from "path";
-import request from "request";
-import rp from "request-promise";
-import requestProgress from "request-progress";
-import ProgressBar from "progress";
+import os from "node:os";
+import fs from "node:fs";
+import path from "node:path";
+import { spawn } from "node:child_process";
+import { ProxyAgent, fetch } from 'undici'
 import extractZip from "extract-zip";
-import { spawn } from "child_process";
-import { filesize } from "filesize";
+
 const env = process.env;
 
 const repoBaseUrl =
   "https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline";
 
 const readDotFlywayFile = () => {
-  let resolveDotFlywayPath = fs.existsSync(
-    path.resolve(__dirname, "../../../../../", ".flyway")
-  )
-    ? path.resolve(__dirname, "../../../../../", ".flyway")
-    : "";
-  // console.log("readDotFlywayFile dotFlywayPath -> ", resolveDotFlywayPath);
-  let encoding = "utf8";
+  const dotFlywayPath = path.resolve(__dirname, "../../../../../", ".flyway");
 
-  var version =
-    resolveDotFlywayPath !== ""
-      ? fs.readFileSync(resolveDotFlywayPath, { encoding })
-      : "";
+  if (!fs.existsSync(dotFlywayPath)) {
+    return '';
+  }
 
-  version !== "" ? console.log("Found version in .flyway -> ", version) : "";
+  const version = fs.readFileSync(dotFlywayPath, { encoding: 'utf8' });
+  console.log("Found version in .flyway -> ", version);
   return version.trim();
 };
 
@@ -35,14 +26,13 @@ const readDotFlywayFile = () => {
  * @returns sources[os.platform()]
  */
 export const getReleaseSource = () =>
-  rp({
-    uri: `${repoBaseUrl}/maven-metadata.xml`
-  }).then(response => {
+  fetch(`${repoBaseUrl}/maven-metadata.xml`)
+    .then(resp => resp.text())
+    .then(response => {
     let releaseRegularExp = new RegExp("<release>(.+)</release>");
     let releaseVersion =
       readDotFlywayFile() || response.match(releaseRegularExp)[1];
 
-    // console.log("getReleaseSource releaseVersion -> ", releaseVersion);
     let sources = {
       win32: {
         url: `${repoBaseUrl}/${releaseVersion}/flyway-commandline-${releaseVersion}-windows-x64.zip`,
@@ -107,63 +97,32 @@ export const downloadFlywaySource = source => {
   }
 
   console.log("Downloading", source.url);
-  console.log("Saving to", source.filename);
 
-  return new Promise((resolve, reject) => {
-    let proxyUrl =
-      env.npm_config_https_proxy ||
-      env.npm_config_http_proxy ||
-      env.npm_config_proxy;
-    let downloadOptions = {
-      uri: source.url,
-      encoding: null, // Get response as a buffer
-      followRedirect: true,
-      headers: {
-        "User-Agent": env.npm_config_user_agent
-      },
-      strictSSL: true,
-      proxy: proxyUrl
-    };
-    let consoleDownloadBar;
+  const proxyUrl =
+    env.npm_config_https_proxy ||
+    env.npm_config_http_proxy ||
+    env.npm_config_proxy;
 
-    requestProgress(
-      request(downloadOptions, (error, response, body) => {
-        if (!error && response.statusCode === 200) {
-          fs.writeFileSync(source.filename, body);
-
-          console.log(`\nReceived ${filesize(body.length)} total.`);
-
-          resolve(source.filename);
-        } else if (response) {
-          console.error(`
-        Error requesting source.
+  return fetch(source.url, {
+    redirect: 'follow',
+    headers: { 'User-Agent': env.npm_config_user_agent },
+    dispatcher: proxyUrl ? new ProxyAgent(proxyUrl) : undefined,
+  }).then(resp => {
+    if (!resp.ok) {
+      throw new Error(`Error requesting source: ${source.url}.
         Status: ${response.statusCode}
-        Request options: ${JSON.stringify(downloadOptions, null, 2)}
+        Proxy URL: ${proxyUrl}
         Response headers: ${JSON.stringify(response.headers, null, 2)}
         Make sure your network and proxy settings are correct.
 
         If you continue to have issues, please report this full log at https://github.com/sgraham/flywaydb-cli`);
-          process.exit(1);
-        } else {
-          console.error("Error downloading : ", error);
-          process.exit(1);
-        }
-      })
-    ).on("progress", state => {
-      try {
-        if (!consoleDownloadBar) {
-          consoleDownloadBar = new ProgressBar("  [:bar] :percent", {
-            total: state.size.total,
-            width: 40
-          });
-        }
+    }
 
-        consoleDownloadBar.curr = state.size.transferred;
-        consoleDownloadBar.tick();
-      } catch (e) {
-        console.log("error", e);
-      }
-    });
+    return resp.arrayBuffer();
+  })
+  .then(body => {
+    fs.writeFileSync(source.filename, Buffer.from(new Uint8Array(body)));
+    return source.filename;
   });
 };
 
@@ -177,20 +136,15 @@ export const extractToLib = file => {
   if (!fs.existsSync(extractDir)) {
     fs.mkdirSync(extractDir);
   } else {
-    fs.removeSync(extractDir);
+    fs.rmSync(extractDir, { recursive: true, force: true });
     fs.mkdirSync(extractDir);
   }
 
   if (path.extname(file) === ".zip") {
     return new Promise((resolve, reject) => {
-      extractZip(file, { dir: extractDir }, err => {
-        if (err) {
-          console.error("Error extracting zip", err);
-          reject(new Error("Error extracting zip"));
-        } else {
-          resolve(extractDir);
-        }
-      });
+      extractZip(file, { dir: extractDir })
+        .then(() => resolve(extractDir))
+        .catch(reject);
     });
   } else {
     return new Promise((resolve, reject) => {
@@ -201,8 +155,7 @@ export const extractToLib = file => {
         if (code === 0) {
           resolve(extractDir);
         } else {
-          console.log("Untaring file failed", code);
-          reject(new Error("Untaring file failed"));
+          reject(new Error(`Untaring file failed: ${code}`));
         }
       });
     });
@@ -220,8 +173,8 @@ export const copyToBin = libDir => {
     let binDir = path.join(__dirname, "../../", "bin");
 
     if (fs.existsSync(flywayDir)) {
-      fs.removeSync(binDir);
-      fs.copySync(flywayDir, binDir);
+      fs.rmSync(binDir, { recursive: true, force: true });
+      fs.cpSync(flywayDir, binDir, { recursive: true });
 
       resolve();
     } else {
@@ -240,5 +193,6 @@ const flywayVersionDir = libDir => {
 };
 
 export const cleanupDirs = () => {
-  fs.removeSync(path.join(__dirname, "../../", "lib"));
+  const libDir = path.join(__dirname, "../../", "lib");
+  fs.rmSync(libDir, { recursive: true, force: true });
 };
