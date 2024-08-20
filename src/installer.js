@@ -14,4 +14,5 @@ getReleaseSource()
   .catch(function(reason) {
     // Handle failed request...
     console.error(`error --> ${reason}`);
+    process.exit(1);
   });
