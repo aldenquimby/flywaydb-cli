@@ -27,8 +27,6 @@ var _extractZip2 = _interopRequireDefault(_extractZip);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
 const env = process.env;
 
 const readDotFlywayFile = () => {
@@ -43,47 +41,39 @@ const readDotFlywayFile = () => {
   return version.trim();
 };
 
-const getReleaseSource = exports.getReleaseSource = (() => {
-  var _ref = _asyncToGenerator(function* () {
-    let releaseVersion = readDotFlywayFile();
-    if (!releaseVersion) {
-      const latestRelease = yield (0, _undici.fetch)(`https://api.github.com/repos/flyway/flyway/releases/latest`);
-      if (!latestRelease.ok) {
-        throw new Error(`Failed to fetch latest release: ${yield latestRelease.text()}`);
-      }
-      releaseVersion = (yield latestRelease.json()).tag_name.split('flyway-')[1];
+const getReleaseSource = exports.getReleaseSource = async () => {
+  let releaseVersion = readDotFlywayFile();
+  if (!releaseVersion) {
+    const latestRelease = await (0, _undici.fetch)(`https://api.github.com/repos/flyway/flyway/releases/latest`);
+    if (!latestRelease.ok) {
+      throw new Error(`Failed to fetch latest release: ${await latestRelease.text()}`);
     }
+    releaseVersion = (await latestRelease.json()).tag_name.split('flyway-')[1];
+  }
 
-    const platforms = {
-      win32: `windows-x64.zip`,
-      linux: `linux-x64.tar.gz`,
-      arm64: `macosx-arm64.tar.gz`,
-      darwin: `macosx-x64.tar.gz`
-    };
+  const platforms = {
+    win32: `windows-x64.zip`,
+    linux: `linux-x64.tar.gz`,
+    arm64: `macosx-arm64.tar.gz`,
+    darwin: `macosx-x64.tar.gz`
+  };
 
-    const buildSource = function (platform) {
-      return {
-        url: `https://github.com/flyway/flyway/releases/download/flyway-${releaseVersion}/flyway-commandline-${releaseVersion}-${platform}`,
-        filename: `flyway-commandline-${releaseVersion}-${platform}`,
-        folder: `flyway-${releaseVersion}`
-      };
-    };
-
-    // Apple Silicon version was released with 9.6.0
-    if (_nodeOs2.default.platform() === "darwin" && _nodeOs2.default.arch() === "arm64") {
-      const [majorVersion, minorVersion] = releaseVersion.split(".");
-      if (Number(majorVersion) > 9 || Number(majorVersion) === 9 && Number(minorVersion) >= 6) {
-        return buildSource(platforms.arm64);
-      }
-    }
-
-    return buildSource(platforms[_nodeOs2.default.platform()]);
+  const buildSource = platform => ({
+    url: `https://github.com/flyway/flyway/releases/download/flyway-${releaseVersion}/flyway-commandline-${releaseVersion}-${platform}`,
+    filename: `flyway-commandline-${releaseVersion}-${platform}`,
+    folder: `flyway-${releaseVersion}`
   });
 
-  return function getReleaseSource() {
-    return _ref.apply(this, arguments);
-  };
-})();
+  // Apple Silicon version was released with 9.6.0
+  if (_nodeOs2.default.platform() === "darwin" && _nodeOs2.default.arch() === "arm64") {
+    const [majorVersion, minorVersion] = releaseVersion.split(".");
+    if (Number(majorVersion) > 9 || Number(majorVersion) === 9 && Number(minorVersion) >= 6) {
+      return buildSource(platforms.arm64);
+    }
+  }
+
+  return buildSource(platforms[_nodeOs2.default.platform()]);
+};
 
 // copied from https://github.com/getsentry/sentry-cli/blob/c65df4fba17101e60e8c31f378f6001b514e5a42/scripts/install.js#L123-L131
 const getNpmCache = () => {
