@@ -28,7 +28,10 @@ After looking into a couple other packages and having issues with JS wrappers. I
 
 ## Flyway version support
 
-`flywaydb-cli` now supports setting the version of Flyway that will be installed. By default `flywaydb-cli` will resolve the latest "releasedVersion" which is published by Flyway. If you wish to set the version place a `.flyway` file in your applications root path with the version you want to install. Version numbers are absolute, so look [here](https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/maven-metadata.xml) for the available versions list.
+`flywaydb-cli` now supports setting the version of Flyway that will be installed.
+By default `flywaydb-cli` will resolve the latest "releasedVersion" which is published by Flyway.
+If you wish to set the version place a `.flyway` file in your applications root path with the version you want to install.
+Version numbers are absolute, so look [here](https://github.com/flyway/flyway/releases) for the available versions list.
 
 Note, only the absolute version number is allowed in the `.flyway` file e.g. 5.2.4
 

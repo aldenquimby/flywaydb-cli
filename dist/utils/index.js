@@ -29,8 +29,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const env = process.env;
 
-const repoBaseUrl = "https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline";
-
 const readDotFlywayFile = () => {
   const dotFlywayPath = _nodePath2.default.resolve(__dirname, "../../../../../", ".flyway");
 
@@ -43,46 +41,39 @@ const readDotFlywayFile = () => {
   return version.trim();
 };
 
-/**
- * @returns sources[os.platform()]
- */
-const getReleaseSource = exports.getReleaseSource = () => (0, _undici.fetch)(`${repoBaseUrl}/maven-metadata.xml`).then(resp => resp.text()).then(response => {
-  let releaseRegularExp = new RegExp("<release>(.+)</release>");
-  let releaseVersion = readDotFlywayFile() || response.match(releaseRegularExp)[1];
-
-  let sources = {
-    win32: {
-      url: `${repoBaseUrl}/${releaseVersion}/flyway-commandline-${releaseVersion}-windows-x64.zip`,
-      filename: `flyway-commandline-${releaseVersion}-windows-x64.zip`,
-      folder: `flyway-${releaseVersion}`
-    },
-    linux: {
-      url: `${repoBaseUrl}/${releaseVersion}/flyway-commandline-${releaseVersion}-linux-x64.tar.gz`,
-      filename: `flyway-commandline-${releaseVersion}-linux-x64.tar.gz`,
-      folder: `flyway-${releaseVersion}`
-    },
-    arm64: {
-      url: `${repoBaseUrl}/${releaseVersion}/flyway-commandline-${releaseVersion}-macosx-arm64.tar.gz`,
-      filename: `flyway-commandline-${releaseVersion}-macosx-arm64.tar.gz`,
-      folder: `flyway-${releaseVersion}`
-    },
-    darwin: {
-      url: `${repoBaseUrl}/${releaseVersion}/flyway-commandline-${releaseVersion}-macosx-x64.tar.gz`,
-      filename: `flyway-commandline-${releaseVersion}-macosx-x64.tar.gz`,
-      folder: `flyway-${releaseVersion}`
+const getReleaseSource = exports.getReleaseSource = async () => {
+  let releaseVersion = readDotFlywayFile();
+  if (!releaseVersion) {
+    const latestRelease = await (0, _undici.fetch)(`https://api.github.com/repos/flyway/flyway/releases/latest`);
+    if (!latestRelease.ok) {
+      throw new Error(`Failed to fetch latest release: ${await latestRelease.text()}`);
     }
+    releaseVersion = (await latestRelease.json()).tag_name.split('flyway-')[1];
+  }
+
+  const platforms = {
+    win32: `windows-x64.zip`,
+    linux: `linux-x64.tar.gz`,
+    arm64: `macosx-arm64.tar.gz`,
+    darwin: `macosx-x64.tar.gz`
   };
+
+  const buildSource = platform => ({
+    url: `https://github.com/flyway/flyway/releases/download/flyway-${releaseVersion}/flyway-commandline-${releaseVersion}-${platform}`,
+    filename: `flyway-commandline-${releaseVersion}-${platform}`,
+    folder: `flyway-${releaseVersion}`
+  });
 
   // Apple Silicon version was released with 9.6.0
   if (_nodeOs2.default.platform() === "darwin" && _nodeOs2.default.arch() === "arm64") {
     const [majorVersion, minorVersion] = releaseVersion.split(".");
     if (Number(majorVersion) > 9 || Number(majorVersion) === 9 && Number(minorVersion) >= 6) {
-      return sources.arm64;
+      return buildSource(platforms.arm64);
     }
   }
 
-  return sources[_nodeOs2.default.platform()];
-});
+  return buildSource(platforms[_nodeOs2.default.platform()]);
+};
 
 // copied from https://github.com/getsentry/sentry-cli/blob/c65df4fba17101e60e8c31f378f6001b514e5a42/scripts/install.js#L123-L131
 const getNpmCache = () => {
